@@ -28,14 +28,11 @@ class UnityFile:
             self._blocks = dict()
             with open(self.fileName) as file:
                 content = file.read()
-            text_blocks, line_numbers = self._split_into_text_blocks(content)
-            for k,v in text_blocks.items():
-                if v == None or v == "" or v.startswith("%YAML "):
-                    continue
-                self._blocks[int(k)] = UnityFileBlock(self.project, self, int(k),v)
+            self._blocks = self.split_content_into_blocks(content,self.project, self)
         return self._blocks
 
-    def _split_into_text_blocks(self, multiline_string: str):
+    @staticmethod
+    def split_into_text_blocks(multiline_string: str):
         text_blocks = {"": ""}
         line_numbers = [(0, None), ]
         lines = multiline_string.split('\n')
@@ -57,6 +54,15 @@ class UnityFile:
             text_blocks[current_key] += line + "\n"
         return text_blocks, line_numbers
 
+    @staticmethod
+    def split_content_into_blocks(multiline_string: str, project, file):
+        blocks = dict()
+        text_blocks, line_numbers = UnityFile.split_into_text_blocks(multiline_string)
+        for k,v in text_blocks.items():
+            if v == None or v == "" or v.startswith("%YAML "):
+                continue
+            blocks[int(k)] = UnityFileBlock(project, file, int(k),v)
+        return blocks
 
 
     @staticmethod

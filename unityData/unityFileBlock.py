@@ -62,27 +62,30 @@ class UnityFileBlock:
 
     @property
     def gameObject(self):
-
+        if self.file == None:
+            return None
         if self.blocktype == "GameObject":
             return self
         if "m_GameObject.fileID" in self:
-            gameobjectID = self["m_GameObject.fileID"]
-            if gameobjectID == 0:
+            id = self["m_GameObject.fileID"]
+            if id == 0:
                 return None
-            if gameobjectID in self.file.blocks:
-                return self.file.blocks[gameobjectID]
+            if id in self.file.blocks:
+                return self.file.blocks[id]
             else:
-                print ("Missing Reference Error")
+                print ("Missing Block ID " + str(id))
                 return None
         if self.blocktype == "PrefabInstance":
-            print ("PrefabInstance does not have a GameObject")
+            #print ("PrefabInstance does not have a GameObject")
             return None
         else:
-            print ("Error: Does not have a GameObject")
+            #print ("Error: Does not have a GameObject")
             return None
 
     @property
     def transform(self):
+        if self.file == None:
+            return None
         if self.isTransform:
             return self
         gameObject = self.gameObject
@@ -93,11 +96,13 @@ class UnityFileBlock:
                     compBlock = self.file.blocks[compID]
                     if compBlock.isTransform:
                         return compBlock
-        print("Object does not have a Transform", "STRIPPED" if self.isStripped else "")
+        #print("Object does not have a Transform", "STRIPPED" if self.isStripped else "")
         return None
 
     @property
     def parent(self):
+        if self.file == None:
+            return None
         if self.blocktype == "PrefabInstance":
             if "m_Modification.m_TransformParent.fileID" in self:
                 id = self["m_Modification.m_TransformParent.fileID"]
@@ -120,12 +125,14 @@ class UnityFileBlock:
             else:
                 print ("Missing Block ID " + str(id))
                 return None
-        print ("Transform does not have a m_Father component")
+        #print ("Transform does not have a m_Father component")
         return None
 
 
     @property
     def children(self):
+        if self.file == None:
+            return None
         transform = self.transform
         if transform == None:
             return []

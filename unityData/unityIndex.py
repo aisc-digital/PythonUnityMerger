@@ -16,6 +16,7 @@ class UnityIndex:
     def __init__(self, projectConfig:"UnityProject"):
         self.project: "UnityProject" = projectConfig
         self.index: Dict[str, UnityFile] = dict()
+        self.reindex()
 
 
     def getReferenceFromGUID(self, guid: str) -> UnityFile:
