@@ -83,8 +83,6 @@ class listmerger:
         return found_files
 
 
-
-
     def recursiveMerge(self, objA, objB, path):
         if (objA == objB):
             return objA

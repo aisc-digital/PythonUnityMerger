@@ -2,8 +2,11 @@
 #   @ author: Christian Grund, AISC GmbH
 #   @ mailto: cg@aisc.digital
 #
+import pathlib
+import shutil
 from typing import List
 
+from UnityMerger.listmerger import listmerger
 from UnityMerger.merge import Merge
 from unityData.unityFileBlock import UnityFileBlock
 from unityData.unityProject import UnityProject
@@ -32,6 +35,16 @@ class MergeUnityFile:
                     else:
                         break
                 merged.write(outText)
+        print("##################################")
+        print("+++ Merge Finished +++")
+
+        if(listmerger.yesno("Do you want to overwrite " + self.file + " now?")):
+            shutil.move(self.file + "_merged", self.file)
+        todelete = [self.file + "_MINE", self.file + "_MINE.meta", self.file + "_THEIRS", self.file + "_THEIRS.meta"]
+        print("\n")
+        if(listmerger.yesno("Do you want to delete the following files now?\n" + "\n".join(todelete))):
+            for f in todelete:
+                pathlib.Path.unlink(f)
         pass
 if __name__ == "__main__":
     import sys

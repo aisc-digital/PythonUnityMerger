@@ -1,4 +1,5 @@
 import base64
+import copy
 import random
 import re
 import shutil
@@ -71,10 +72,75 @@ class Merge:
         print("#####################################")
         print(f"Conflict for \n{value_a.hierarchyPath}\n{value_b.hierarchyPath}:")
 
-        lmr = listmerger()
-        NewYaml = lmr.recursiveMerge(value_a.object,value_b.object, "");
+        if value_a.blocktype == value_b.blocktype and value_a.blocktype == "PrefabInstance":
+            lmr = listmerger()
+            a_without_mod = copy.deepcopy(value_a.object)
+            b_without_mod = copy.deepcopy(value_a.object)
+
+            a_without_mod["PrefabInstance"]["m_Modification"]["m_Modifications"] = list()
+            b_without_mod["PrefabInstance"]["m_Modification"]["m_Modifications"] = list()
+
+            NewYaml = lmr.recursiveMerge(a_without_mod,b_without_mod, "")
+
+            #modifications:
+            mod_a = copy.deepcopy(value_a["m_Modification.m_Modifications"])
+            mod_b = copy.deepcopy(value_b["m_Modification.m_Modifications"])
+            mod_out = list()
+
+            dict_a = {str(x["target"])+str(x["propertyPath"]) : x for x in mod_a}
+            dict_b = {str(x["target"])+str(x["propertyPath"]) : x for x in mod_b}
+
+            for ka,va in dict_a.items():
+
+                path = value_a.hierarchyPath + "//" + value_a.searchReferencePath(va["target"]["guid"],va["target"]["fileID"])
+                ref = value_a.searchReference(va["target"]["guid"],va["target"]["fileID"])
+                refobj = value_a.project.getReferenceFromGUID(ref["guid"]).blocks[ref["fileID"]]
+
+                if ka in dict_b:
+                    vb = dict_b[ka]
+                    if va == vb:
+                        mod_out.append(va)
+                    else:
+                        print("#####")
+                        listmerger.display_in_columns("Value in A:\n" + str(va["value"]) + "\n" + str(va["objectReference"]) , f"Value in B:\n" + str(vb["value"]) + "\n" + str(vb["objectReference"]) + "\n")
+                        print("Property: [" + refobj.blocktype + "]"+ va["propertyPath"])
+                        print("Path: "+path)
+                        print()
+                        if(listmerger.ab("Values for A and B differ: which one do you wanna keep")):
+                            mod_out.append(va)
+                        else:
+                            mod_out.append(vb)
+                else:
+                    print("#####")
+                    print("Property: [" + refobj.blocktype + "]" + va["propertyPath"])
+                    print("Path: "+path)
+                    print(va)
+                    if(listmerger.yesno(f"modification for {path} is in A but not in B. Do you wanna keep it?")):
+                        mod_out.append(va)
+
+            for kb,vb in dict_b.items():
+
+                path = value_b.hierarchyPath + "//" + value_b.searchReferencePath(vb["target"]["guid"],vb["target"]["fileID"])
+                ref = value_b.searchReference(vb["target"]["guid"],vb["target"]["fileID"])
+                refobj = value_b.project.getReferenceFromGUID(ref["guid"]).blocks[ref["fileID"]]
+
+                if kb in dict_a:
+                        continue # already handled above
+                else:
+                    print("#####")
+                    print("Property: [" + refobj.blocktype + "]" + vb["propertyPath"])
+                    print("Path: "+path)
+                    print(vb)
+                    if(listmerger.yesno(f"modification for {path} is in A but not in B. Do you wanna keep it?")):
+                        mod_out.append(vb)
+
+            NewYaml["PrefabInstance"]["m_Modification"]["m_Modifications"] = mod_out
+        else:
+            lmr = listmerger()
+            NewYaml = lmr.recursiveMerge(value_a.object,value_b.object, "");
         yamlstring = StringIO()
-        yaml.safe_dump(NewYaml,yamlstring,sort_keys=False)
+
+        yaml.safe_dump(NewYaml,yamlstring,sort_keys=False, default_flow_style=None, default_style="")
         yamlstring.seek(0)
         retval = yamlstring.read()
         yamlstring.close()

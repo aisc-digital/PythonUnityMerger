@@ -183,8 +183,17 @@ class UnityFileBlock:
                 nestedGUID = npf["m_SourcePrefab.guid"]
                 path = elem["prefabNestPath"] + [{"guid":elem["guid"], "fileID":npf.uid}]
                 searchList.append({"guid":nestedGUID, "fileID":nestedID,"prefabNestPath":path})
-
         return None
+
+
+    def searchReferencePath(self, guid, fileID):
+        ref = self.searchReference(guid, fileID)
+        leaf = self.project.getReferenceFromGUID(ref["guid"])
+        path = leaf.blocks[ref["fileID"]].hierarchyPath
+        for pnp in ref["prefabNestPath"]:
+            nest = self.project.getReferenceFromGUID(pnp["guid"])
+            path = nest.blocks[pnp["fileID"]].hierarchyPath + "//" + path
+        return path
 
     def unstripped(self):
         if not self.isStripped:
