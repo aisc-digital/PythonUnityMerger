@@ -1,3 +1,9 @@
+#   _____  _    __
+# ,´     \/ \ _`,    Author: Christian Grund
+# |  C/  /  / __     Company: AISC GmbH
+#  \_/__/__/ /_      mailto: cg@aisc.digital
+#
+
 import base64
 import copy
 import random
@@ -207,20 +213,24 @@ class Merge:
         with open(conflict_file_path + ".meta") as meta:
             metacontent = meta.read()
 
-        with open(conflict_file_path + "_MINE", "w") as mf:
+        cfp_split = conflict_file_path.rsplit('.',1)
+        mineFileName = cfp_split[0] + "_MINE." + cfp_split[1]
+        theirsFileName = cfp_split[0] + "_THEIRS." + cfp_split[1]
+
+        with open(mineFileName, "w") as mf:
             mf.write(mine_content)
-        with open(conflict_file_path + "_THEIRS", "w") as tf:
+        with open(theirsFileName, "w") as tf:
             tf.write(theirs_content)
 
         mineGUID = base64.b16encode(random.getrandbits(128).to_bytes(16, byteorder='little')).decode().lower()
         theirsGUID = base64.b16encode(random.getrandbits(128).to_bytes(16, byteorder='little')).decode().lower()
 
-        with open(conflict_file_path + "_MINE.meta", "w") as mf:
+        with open(mineFileName + ".meta", "w") as mf:
             mf.write(re.sub(r'guid: [0-9a-f]+', f'guid: {mineGUID}',metacontent))
-        with open(conflict_file_path + "_THEIRS.meta", "w") as tf:
+        with open(theirsFileName + ".meta", "w") as tf:
             tf.write(re.sub(r'guid: [0-9a-f]+', f'guid: {theirsGUID}',metacontent))
 
-        return mineGUID, theirsGUID
+        return mineGUID, theirsGUID, mineFileName, theirsFileName
 
 if __name__ == "__main__":
     pass

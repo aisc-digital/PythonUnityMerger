@@ -1,9 +1,12 @@
+#   _____  _    __
+# ,´     \/ \ _`,    Author: Christian Grund
+# |  C/  /  / __     Company: AISC GmbH
+#  \_/__/__/ /_      mailto: cg@aisc.digital
 #
-#   @ author: Christian Grund, AISC GmbH
-#   @ mailto: cg@aisc.digital
-#
+import os
 import pathlib
 import shutil
+from configparser import ConfigParser
 from typing import List
 
 from UnityMerger.listmerger import listmerger
@@ -17,8 +20,26 @@ class MergeUnityFile:
         self.projectconf = projectconf
         self.file = file
 
+        if os.path.isdir(projectconf):
+            if os.path.exists(os.path.join(projectconf,"UnityToolPackConfig.cfg")):
+                self.file = os.path.join(projectconf,"UnityToolPackConfig.cfg")
+            else:
+                if(os.path.exists(os.path.join(projectconf,"Assets")) and os.path.exists(os.path.join(projectconf,"Packages")) and os.path.exists(os.path.join(projectconf,"Library"))):
+                    config = ConfigParser()
+                    config['PATHS'] = {
+                        'assetfolder': 'Assets',
+                        'libraryfolder': 'Library',
+                        'packagesfolder': 'Packages'
+                    }
+                    # Write the configuration to a file
+                    with open(os.path.join(projectconf,"UnityToolPackConfig.cfg"), 'w') as configfile:
+                        config.write(configfile)
+                else:
+                    print("The folder does not seem to be a Unity Project")
+                    raise FileNotFoundError;
+
     def resolveInteractive(self):
-        mineGUID, theirsGUID = Merge.createMineTheirsFiles(self.file)
+        mineGUID, theirsGUID, mineFileName, theirsFilename = Merge.createMineTheirsFiles(self.file)
         project = UnityProject(self.projectconf)
         mineFile = project.getReferenceFromGUID(mineGUID)
         theirFile = project.getReferenceFromGUID(theirsGUID)
@@ -40,7 +61,7 @@ class MergeUnityFile:
 
         if(listmerger.yesno("Do you want to overwrite " + self.file + " now?")):
             shutil.move(self.file + "_merged", self.file)
-        todelete = [self.file + "_MINE", self.file + "_MINE.meta", self.file + "_THEIRS", self.file + "_THEIRS.meta"]
+        todelete = [mineFileName, mineFileName + ".meta", theirsFilename, theirsFilename + ".meta"]
         print("\n")
         if(listmerger.yesno("Do you want to delete the following files now?\n" + "\n".join(todelete))):
             for f in todelete:
@@ -48,5 +69,26 @@ class MergeUnityFile:
         pass
 if __name__ == "__main__":
     import sys
+
+    print("""                                         
+    _____  _    __   AISC Unity Tool Pack
+  ,´     \/ \ _`,    Merge Tool
+  |  C/  /  / __     
+   \_/__/__/ /_      by Christian Grund, AISC GmbH
+
+#####################################################
+""")
+
+    if(len(sys.argv != 3)):
+        print("""
+ Usage:        
+   using ProjectConfigFile:
+     mergeUnityFile.py [ProjectConfig] [FileWithMergeConflicts]
+    
+   using Directory
+     mergeUnityFile.py [UnityProjectPath] [FileWithMergeConflicts]
+     note: this will automatically generate a config file UnityToolPackConfig.cfg in your Unity Project Directory 
+""")
+
     muf = MergeUnityFile(sys.argv[1], sys.argv[2])
     muf.resolveInteractive()

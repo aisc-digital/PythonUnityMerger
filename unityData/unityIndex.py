@@ -1,13 +1,15 @@
+#   _____  _    __
+# ,´     \/ \ _`,    Author: Christian Grund
+# |  C/  /  / __     Company: AISC GmbH
+#  \_/__/__/ /_      mailto: cg@aisc.digital
 #
-#   @ author: Christian Grund, AISC GmbH
-#   @ mailto: cg@aisc.digital
-#
-
+import functools
 import glob
+import multiprocessing
 import os
 import re
 from typing import Dict
-
+from multiprocessing import Pool, Manager
 
 
 from unityData.unityFile import UnityFile
@@ -36,17 +38,35 @@ class UnityIndex:
         return ref
 
     def reindex(self):
+        print("Glob AssetFolder")
         search_pattern = os.path.join(self.project.AssetFolder, f'**/*.meta')
         found_files = glob.glob(search_pattern, recursive=True)
 
+        print("Glob PackagesFolder")
         search_pattern = os.path.join(self.project.PackagesFolder, f'**/*.meta')
         found_files += glob.glob(search_pattern, recursive=True)
 
+        print("Glob LibraryFolder")
         search_pattern = os.path.join(self.project.LibraryFolder, f'**/*.meta')
         found_files += glob.glob(search_pattern, recursive=True)
-        for file in found_files:
-            unityReference = UnityFile.fromFile(self.project, file)
-            self.index[unityReference.guid] = unityReference
+        def indexFile(file, index, project):
+            unityReference = UnityFile.fromFile(project, file)
+            print ("[OK]" + file)
+            index[unityReference.guid] = unityReference
+
+        #for file in found_files:
+            #unityReference = UnityFile.fromFile(self.project, file)
+            #self.index[unityReference.guid] = unityReference
+        #    guid,ref = indexFile(file)
+        #    self.index[guid] = ref
+
+        manager = multiprocessing.Manager()
+        managerIndex = manager.dict()
+
+        print("Load Files to Index")
+        with Pool() as pool:
+            self.index = pool.map(functools.partial(indexFile, index=managerIndex, project=self.project), found_files)
+
 
 if __name__ == "__main__":
     import sys

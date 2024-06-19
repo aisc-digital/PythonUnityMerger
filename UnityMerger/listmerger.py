@@ -1,3 +1,9 @@
+#   _____  _    __
+# ,´     \/ \ _`,    Author: Christian Grund
+# |  C/  /  / __     Company: AISC GmbH
+#  \_/__/__/ /_      mailto: cg@aisc.digital
+#
+
 from copy import copy
 from difflib import Differ
 

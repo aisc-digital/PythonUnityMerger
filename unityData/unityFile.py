@@ -1,6 +1,7 @@
-#
-#   @ author: Christian Grund, AISC GmbH
-#   @ mailto: cg@aisc.digital
+#   _____  _    __
+# ,´     \/ \ _`,    Author: Christian Grund
+# |  C/  /  / __     Company: AISC GmbH
+#  \_/__/__/ /_      mailto: cg@aisc.digital
 #
 import re
 from typing import List
