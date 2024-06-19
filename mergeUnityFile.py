@@ -22,7 +22,7 @@ class MergeUnityFile:
 
         if os.path.isdir(projectconf):
             if os.path.exists(os.path.join(projectconf,"UnityToolPackConfig.cfg")):
-                self.file = os.path.join(projectconf,"UnityToolPackConfig.cfg")
+                self.projectconf = os.path.join(projectconf,"UnityToolPackConfig.cfg")
             else:
                 if(os.path.exists(os.path.join(projectconf,"Assets")) and os.path.exists(os.path.join(projectconf,"Packages")) and os.path.exists(os.path.join(projectconf,"Library"))):
                     config = ConfigParser()
@@ -34,6 +34,7 @@ class MergeUnityFile:
                     # Write the configuration to a file
                     with open(os.path.join(projectconf,"UnityToolPackConfig.cfg"), 'w') as configfile:
                         config.write(configfile)
+                    self.projectconf = os.path.join(projectconf,"UnityToolPackConfig.cfg")
                 else:
                     print("The folder does not seem to be a Unity Project")
                     raise FileNotFoundError;
