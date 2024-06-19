@@ -49,23 +49,11 @@ class UnityIndex:
         print("Glob LibraryFolder")
         search_pattern = os.path.join(self.project.LibraryFolder, f'**/*.meta')
         found_files += glob.glob(search_pattern, recursive=True)
-        def indexFile(file, index, project):
-            unityReference = UnityFile.fromFile(project, file)
-            print ("[OK]" + file)
-            index[unityReference.guid] = unityReference
+        for file in found_files:
+            unityReference = UnityFile.fromFile(self.project, file)
+            self.index[unityReference.guid] = unityReference
 
-        #for file in found_files:
-            #unityReference = UnityFile.fromFile(self.project, file)
-            #self.index[unityReference.guid] = unityReference
-        #    guid,ref = indexFile(file)
-        #    self.index[guid] = ref
 
-        manager = multiprocessing.Manager()
-        managerIndex = manager.dict()
-
-        print("Load Files to Index")
-        with Pool() as pool:
-            self.index = pool.map(functools.partial(indexFile, index=managerIndex, project=self.project), found_files)
 
 
 if __name__ == "__main__":
