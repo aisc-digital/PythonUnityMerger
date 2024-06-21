@@ -1,28 +1,67 @@
-# Python Unity Tool Pack #
+Python Unity Tool Pack
+======================
+
 by Christian Grund, AISC GmbH
 
-## Merge Untiy File ##
+Overview
+--------
 
-Resolve Merge conflicts interactivly.
+The Python Unity Tool Pack is a tool for interactively resolving merge conflicts in Unity projects. It provides an efficient way to resolve git merge conflicts in Unity files, ensuring smooth collaboration during development.
 
-### Usage ###
-   #### using ProjectConfigFile: ####
-     mergeUnityFile.py [ProjectConfig] [FileWithMergeConflicts]
+Features
+--------
+
+*   **Interactive Conflict Resolution**: Users can resolve merge conflicts in Unity projects interactively.
+*   **Automatic Configuration File**: Automatically generates a configuration file when the path to a Unity project is provided.
+*   **YAML Tools**: Support for processing Unity YAML files.
+*   **List Merger**: Functions for merging and displaying list differences.
+*   **Automatic Indexing**: Ability to index GUIDs from the `.meta` files to give propper information about the conflicting values.
+
+Installation
+------------
+
+1.  **Clone the Repository**:
     
-   #### using Unity Project Path ####
-     mergeUnityFile.py [UnityProjectPath] [FileWithMergeConflicts]
+        git clone <repository-url>
     
-note: this will automatically generate a config file UnityToolPackConfig.cfg in your Unity Project Directory
-     
-### Example ###
+2.  **Navigate to the Project Directory**:
+    
+        cd pythonUnityToolPack
+    
+3.  **Create and Activate Virtual Environment**:
+    
+        python -m venv venv
+        source venv/bin/activate   # On Windows: venv\Scripts\activate
+    
+4.  **Install Dependencies**:
+    
+        pip install -r requirements.txt
+    
 
-If you have an override of the text of a TMP object inside a prefab, it will ask me something like this:
+Usage
+-----
 
-      Canvases/VerticalCanvas/ScrollRect/Viewport/Content/VerticalLayout/2col (1)/rightCol/[MenuItem Numeric.prefab]:
-      #####
-      Value in A:    Value in B:
-      99             81
-      {'fileID': 0}  {'fileID': 0}
-      Property: [MonoBehaviour]m_text
-      Path: Canvases/VerticalCanvas/ScrollRect/Viewport/Content/VerticalLayout/2col (1)/rightCol/[MenuItem Numeric.prefab]//[MenuItemWithoutImage.prefab]//MenuItemWithoutImage/Text/Subtitle
-      Values for A and B differ: which one do you wanna keep [a/b]
+### Merging Unity Files
+
+#### Using a Project Configuration File
+
+    python mergeUnityFile.py [ProjectConfig] [FileWithMergeConflicts]
+
+*   `ProjectConfig`: Path to the project configuration file.
+*   `FileWithMergeConflicts`: Path to the file with merge conflicts.
+
+#### Using Unity Project Path
+
+    python mergeUnityFile.py [UnityProjectPath] [FileWithMergeConflicts]
+
+*   `UnityProjectPath`: Path to the Unity project folder.
+*   `FileWithMergeConflicts`: Path to the file with merge conflicts.
+
+**Note**: When using the Unity project path, a configuration file `UnityToolPackConfig.cfg` will be automatically generated in the Unity project directory.
+
+
+Author
+------
+
+Christian Grund, AISC GmbH  
+Email: [cg@aisc.digital](mailto:cg@aisc.digital)
