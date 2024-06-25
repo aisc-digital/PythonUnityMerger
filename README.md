@@ -1,4 +1,4 @@
-Python Unity Tool Pack
+Python Unity Merger
 ======================
 
 by Christian Grund, AISC GmbH
@@ -6,7 +6,7 @@ by Christian Grund, AISC GmbH
 Overview
 --------
 
-The Python Unity Tool Pack is a tool for interactively resolving merge conflicts in Unity projects. It provides an efficient way to resolve git merge conflicts in Unity files, ensuring smooth collaboration during development.
+The Python Unity Merger is a tool for interactively resolving merge conflicts in Unity projects. It provides an efficient way to resolve git merge conflicts in Unity files, ensuring smooth collaboration during development.
 
 Features
 --------
