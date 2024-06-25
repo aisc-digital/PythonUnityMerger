@@ -43,19 +43,21 @@ Usage
 
 ### Merging Unity Files
 
-#### Using a Project Configuration File
-
-    python mergeUnityFile.py [ProjectConfig] [FileWithMergeConflicts]
-
-*   `ProjectConfig`: Path to the project configuration file.
-*   `FileWithMergeConflicts`: Path to the file with merge conflicts.
-
 #### Using Unity Project Path
 
     python mergeUnityFile.py [UnityProjectPath] [FileWithMergeConflicts]
 
 *   `UnityProjectPath`: Path to the Unity project folder.
 *   `FileWithMergeConflicts`: Path to the file with merge conflicts.
+
+#### Using a Project Configuration File (alternative)
+Using a config file you can edit the location of the Assets, Packages and Library folder. Further configurations may come in future.
+
+    python mergeUnityFile.py [ProjectConfig] [FileWithMergeConflicts]
+
+*   `ProjectConfig`: Path to the project configuration file.
+*   `FileWithMergeConflicts`: Path to the file with merge conflicts.
+
 
 **Note**: When using the Unity project path, a configuration file `UnityToolPackConfig.cfg` will be automatically generated in the Unity project directory.
 
