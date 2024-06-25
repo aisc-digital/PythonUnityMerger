@@ -26,7 +26,7 @@ Installation
     
 2.  **Navigate to the Project Directory**:
     
-        cd pythonUnityToolPack
+        cd PythonUnityMerger
     
 3.  **Create and Activate Virtual Environment**:
     
