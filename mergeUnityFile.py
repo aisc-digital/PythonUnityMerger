@@ -9,7 +9,7 @@ import shutil
 from configparser import ConfigParser
 from typing import List
 
-from UnityMerger.listmerger import listmerger
+from UnityMerger.listmerger import Listmerger
 from UnityMerger.merge import Merge
 from unityData.unityFileBlock import UnityFileBlock
 from unityData.unityProject import UnityProject
@@ -49,7 +49,10 @@ class MergeUnityFile:
         mergedBlocks:List[UnityFileBlock] = Merge.merge_UnityFiles(mineFile,theirFile)
         mergedBlocks.sort(key=lambda x:x.uid)
         outText = "".join([b.block for b in mergedBlocks])
-        with open(self.file + "_merged", "w") as merged:
+
+        splt = self.file.rsplit('.',1)
+        mergedFileName = splt[0] + "_MERGED." + splt[1]
+        with open(mergedFileName, "w") as merged:
             with open(mineFile.fileName) as mine:
                 for line in mine:
                     if line.startswith("%"):
@@ -60,11 +63,11 @@ class MergeUnityFile:
         print("##################################")
         print("+++ Merge Finished +++")
 
-        if(listmerger.yesno("Do you want to overwrite " + self.file + " now?")):
-            shutil.move(self.file + "_merged", self.file)
+        if(Listmerger.yesno("Do you want to overwrite " + self.file + " now?")):
+            shutil.move(mergedFileName, self.file)
         todelete = [mineFileName, mineFileName + ".meta", theirsFilename, theirsFilename + ".meta"]
         print("\n")
-        if(listmerger.yesno("Do you want to delete the following files now?\n" + "\n".join(todelete))):
+        if(Listmerger.yesno("Do you want to delete the following files now?\n" + "\n".join(todelete))):
             for f in todelete:
                 pathlib.Path.unlink(f)
         pass

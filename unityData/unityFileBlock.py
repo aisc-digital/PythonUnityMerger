@@ -189,8 +189,11 @@ class UnityFileBlock:
 
     def searchReferencePath(self, guid, fileID):
         ref = self.searchReference(guid, fileID)
-        leaf = self.project.getReferenceFromGUID(ref["guid"])
-        path = leaf.blocks[ref["fileID"]].hierarchyPath
+        if(ref == None):
+            return "+UNKNOWN+"
+        else:
+            leaf = self.project.getReferenceFromGUID(ref["guid"])
+            path = leaf.blocks[ref["fileID"]].hierarchyPath
         for pnp in ref["prefabNestPath"]:
             nest = self.project.getReferenceFromGUID(pnp["guid"])
             path = nest.blocks[pnp["fileID"]].hierarchyPath + "//" + path

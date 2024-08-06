@@ -18,7 +18,11 @@ from collections import OrderedDict
 from difflib import Differ
 from time import strftime, gmtime
 
-from UnityMerger.listmerger import listmerger
+from UnityMerger.MonoBehaviourMerger import MonoBehaviourMerger
+from UnityMerger.TransformMerger import TransformMerger
+from UnityMerger.UnityYamlTools import UnityYamlTools
+from UnityMerger.listmerger import Listmerger
+from UnityMerger.prefabmerger import PrefabMerger
 from unityData.unityFile import UnityFile
 from unityData.unityFileBlock import UnityFileBlock
 from unityData.unityProject import UnityProject
@@ -73,108 +77,65 @@ class Merge:
             print(f"{left_line}{left_padding}  {right_line}{right_padding}")
 
     @staticmethod
-    def handleMergeConflict(value_a:UnityFileBlock, value_b:UnityFileBlock):
+    def handleMergeConflict(value_m:UnityFileBlock, value_t:UnityFileBlock):
         print("")
         print("#####################################")
-        print(f"Conflict for \n{value_a.hierarchyPath}\n{value_b.hierarchyPath}:")
+        print("Conflict for")
 
-        if value_a.blocktype == value_b.blocktype and value_a.blocktype == "PrefabInstance":
-            lmr = listmerger()
-            a_without_mod = copy.deepcopy(value_a.object)
-            b_without_mod = copy.deepcopy(value_a.object)
+        UnityYamlTools.VisualizeHierarchyPath(value_m.hierarchyPath)
+        if value_m.hierarchyPath != value_t.hierarchyPath:
+            print("-> Path in B")
+            UnityYamlTools.VisualizeHierarchyPath(value_t.hierarchyPath)
 
-            a_without_mod["PrefabInstance"]["m_Modification"]["m_Modifications"] = list()
-            b_without_mod["PrefabInstance"]["m_Modification"]["m_Modifications"] = list()
-
-            NewYaml = lmr.recursiveMerge(a_without_mod,b_without_mod, "")
-
-            #modifications:
-            mod_a = copy.deepcopy(value_a["m_Modification.m_Modifications"])
-            mod_b = copy.deepcopy(value_b["m_Modification.m_Modifications"])
-            mod_out = list()
-
-            dict_a = {str(x["target"])+str(x["propertyPath"]) : x for x in mod_a}
-            dict_b = {str(x["target"])+str(x["propertyPath"]) : x for x in mod_b}
-
-            for ka,va in dict_a.items():
-
-                path = value_a.hierarchyPath + "//" + value_a.searchReferencePath(va["target"]["guid"],va["target"]["fileID"])
-                ref = value_a.searchReference(va["target"]["guid"],va["target"]["fileID"])
-                refobj = value_a.project.getReferenceFromGUID(ref["guid"]).blocks[ref["fileID"]]
-
-                if ka in dict_b:
-                    vb = dict_b[ka]
-                    if va == vb:
-                        mod_out.append(va)
-                    else:
-                        print("#####")
-                        listmerger.display_in_columns("Value in A:\n" + str(va["value"]) + "\n" + str(va["objectReference"]) , f"Value in B:\n" + str(vb["value"]) + "\n" + str(vb["objectReference"]) + "\n")
-                        print("Property: [" + refobj.blocktype + "]"+ va["propertyPath"])
-                        print("Path: "+path)
-                        print()
-                        if(listmerger.ab("Values for A and B differ: which one do you wanna keep")):
-                            mod_out.append(va)
-                        else:
-                            mod_out.append(vb)
-                else:
-                    print("#####")
-                    print("Property: [" + refobj.blocktype + "]" + va["propertyPath"])
-                    print("Path: "+path)
-                    print(va)
-                    if(listmerger.yesno(f"modification for {path} is in A but not in B. Do you wanna keep it?")):
-                        mod_out.append(va)
-
-            for kb,vb in dict_b.items():
-
-                path = value_b.hierarchyPath + "//" + value_b.searchReferencePath(vb["target"]["guid"],vb["target"]["fileID"])
-                ref = value_b.searchReference(vb["target"]["guid"],vb["target"]["fileID"])
-                refobj = value_b.project.getReferenceFromGUID(ref["guid"]).blocks[ref["fileID"]]
-
-                if kb in dict_a:
-                        continue # already handled above
-                else:
-                    print("#####")
-                    print("Property: [" + refobj.blocktype + "]" + vb["propertyPath"])
-                    print("Path: "+path)
-                    print(vb)
-                    if(listmerger.yesno(f"modification for {path} is in A but not in B. Do you wanna keep it?")):
-                        mod_out.append(vb)
-
-            NewYaml["PrefabInstance"]["m_Modification"]["m_Modifications"] = mod_out
+        if value_m.blocktype == value_t.blocktype and value_m.blocktype == "PrefabInstance":
+            pm = PrefabMerger(value_m, value_t)
+            NewYaml = pm.mergePrefab()
+        elif value_m.blocktype == value_t.blocktype and value_m.blocktype == "MonoBehaviour":
+            mbm = MonoBehaviourMerger(value_m, value_t)
+            NewYaml = mbm.merge()
+        elif value_m.blocktype == value_t.blocktype and value_m.blocktype == "Transform":
+            tm = TransformMerger(value_m, value_t)
+            NewYaml = tm.merge()
         else:
-            lmr = listmerger()
-            NewYaml = lmr.recursiveMerge(value_a.object,value_b.object, "");
+            lmr = Listmerger()
+            NewYaml = lmr.recursiveMerge(value_m.object, value_t.object, "");
         yamlstring = StringIO()
 
         yaml.safe_dump(NewYaml,yamlstring,sort_keys=False, default_flow_style=None, default_style="")
         yamlstring.seek(0)
         retval = yamlstring.read()
         yamlstring.close()
-        headline = value_a.block.split("\n",1)[0]
-        ufb = UnityFileBlock(value_a.project,None,value_a.uid,headline + "\n" + retval)
+        headline = value_m.block.split("\n", 1)[0]
+        ufb = UnityFileBlock(value_m.project, None, value_m.uid, headline + "\n" + retval)
         return ufb
 
     @staticmethod
     def merge_UnityFiles(mineFile,theirsFile) -> List[UnityFileBlock]:
         mergedBlocks:List[UnityFileBlock] = list()
 
+        # Generate lists of all block IDs
         mineKeys = set(mineFile.blocks.keys())
         theirsKeys = set(theirsFile.blocks.keys())
 
+        # Generate lists of differing blocks
         onlyMineKeys = mineKeys.difference(theirsKeys)
         onlyTheirsKeys = theirsKeys.difference(mineKeys)
         bothKeys = mineKeys.intersection(theirsKeys)
 
+        # Blocks which do only appear in one of both are merged directly.
         mergedBlocks.extend([mineFile.blocks[k] for k in onlyMineKeys])
         mergedBlocks.extend([theirsFile.blocks[k] for k in onlyTheirsKeys])
 
+        # Blocks which are in both, need to be compared and merged
         for key in bothKeys:
             mineBlock:UnityFileBlock = mineFile.blocks[key]
             theirsBlock:UnityFileBlock = theirsFile.blocks[key]
 
             if mineBlock.block == theirsBlock.block:
+                # equal blocks
                 mergedBlocks.append(mineBlock)
             else:
+                # unequal blocks -> MERGE CONFLICT
                 m = Merge.handleMergeConflict(mineBlock, theirsBlock)
                 mergedBlocks.append(m)
         return mergedBlocks
@@ -222,6 +183,7 @@ class Merge:
         with open(theirsFileName, "w") as tf:
             tf.write(theirs_content)
 
+        #to create valid Unity Files, we add meta files with random GUIDs. This enables us to open MINE and THERIS in Unity
         mineGUID = base64.b16encode(random.getrandbits(128).to_bytes(16, byteorder='little')).decode().lower()
         theirsGUID = base64.b16encode(random.getrandbits(128).to_bytes(16, byteorder='little')).decode().lower()
 

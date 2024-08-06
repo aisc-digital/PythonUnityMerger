@@ -13,7 +13,9 @@ from UnityMerger.UnityYamlTools import UnityYamlTools
 from unityData.unityFileBlock import UnityFileBlock
 
 
-class listmerger:
+class Listmerger:
+    def __init__(self, project):
+        self.project = project
     @staticmethod
     def highlight_string_at_idxs(string, indexes):
         # hl = "\x1b[38;5;160m"  # 8-bit
@@ -69,10 +71,6 @@ class listmerger:
             choice = input(text + " [a/b]").strip().lower()
         return choice == "a"
 
-
-    def __init__(self):
-        pass
-
     @staticmethod
     def search_for_string_in_files(root_dir, search_string):
         found_files = []
@@ -89,81 +87,82 @@ class listmerger:
         return found_files
 
 
-    def recursiveMerge(self, objA, objB, path):
-        if (objA == objB):
-            return objA
-        if type(objA) == type(objB) and type(objA) == dict:
-            return self.mergeDict(objA, objB, path)
-        elif type(objA) == type(objB) and type(objA) == list:
-            return self.mergeList(objA, objB, path)
+    def recursiveMerge(self, objM, objT, path):
+        if (objM == objT):
+            return objM
+        if type(objM) == type(objT) and type(objM) == dict:
+            return self.mergeDict(objM, objT, path)
+        elif type(objM) == type(objT) and type(objM) == list:
+            return self.mergeList(objM, objT, path)
         else:
-            return self.mergeOther(objA, objB, path)
+            return self.mergeOther(objM, objT, path)
 
 
     def loadObject(self, id, dict):
-        datablockA = {k:v for k,v in dict.items() if str(id) in k}
-        firstItem = list(datablockA.values())[0]
+        datablockM = {k:v for k,v in dict.items() if str(id) in k}
+        firstItem = list(datablockM.values())[0]
         firstItem = firstItem[firstItem.find("\n")+1:]
         return yaml.load(firstItem, yaml.Loader)
     def getPathNameFromDictKey(self,k:str, obj):
         return k
-    def mergeDict(self,objA, objB, path):
+    def mergeDict(self, objM, objT, path):
         out = dict()
-        for k in objA.keys():
-            if not (k in objB.keys()):
-                print(objA[k])
-                if(self.yesno(path + "/" + k + " is in A but not in B. Do you wanna keep it?")):
-                    out[k] = objA[k]
-        for k in objB.keys():
-            if not (k in objA.keys()):
-                print(objB[k])
-                if(self.yesno(path + "/" + k + " is in B but not in A. Do you wanna keep it?")):
-                    out[k] = objB[k]
-        for k in objA.keys():
-            if (k in objB.keys()):
-                out[k] = self.recursiveMerge(objA[k], objB[k], path + "/" + self.getPathNameFromDictKey(k, objA[k]))
+        for k in objM.keys():
+            if not (k in objT.keys()):
+                print(objM[k])
+                if(self.yesno(path + "/" + k + " is in MINE but not in THEIRS. Do you wanna keep it?")):
+                    out[k] = objM[k]
+        for k in objT.keys():
+            if not (k in objM.keys()):
+                print(objT[k])
+                if(self.yesno(path + "/" + k + " is in THEIRS but not in MINE. Do you wanna keep it?")):
+                    out[k] = objT[k]
+        for k in objM.keys():
+            if (k in objT.keys()):
+                out[k] = self.recursiveMerge(objM[k], objT[k], path + "/" + self.getPathNameFromDictKey(k, objM[k]))
         return out
 
 
-    def mergeList(self,objA, objB, path):
-        setA = set([str(a) for a in objA])
-        setB = set([str(a) for a in objB])
+    def mergeList(self, objM, objT, path):
+        setA = set([str(a) for a in objM])
+        setB = set([str(a) for a in objT])
         if (setA == setB):
-            if(listmerger.ab(path + " has a different ordering in A and in B. Which ordering do you wanna keep?")):
-                return objA
+            UnityYamlTools.VisualizeHierarchyPath(path)
+            if(Listmerger.ab(path + " has a different *ordering* in [a]MINE and in [b]THERIS. Which *ordering* do you wanna keep?")):
+                return objM
             else:
-                return objB
+                return objT
 
         out = list()
-        for item in objA:
-            if item in objB:
+        for item in objM:
+            if item in objT:
                 out.append(item)
-        for item in objA:
-            if not (item in objB):
+        for item in objM:
+            if not (item in objT):
                 print(item)
-                if(listmerger.yesno("The above in "+ path +" is in A but not in B. Do you wanna keep it?")):
+                if(Listmerger.yesno("The above in " + path + " is in MINE but not in THEIRS. Do you wanna keep it?")):
                     out.append(item)
-        for item in objB:
-            if not (item in objA):
+        for item in objT:
+            if not (item in objM):
                 print(item)
-                if(listmerger.yesno("The above in "+ path +" is in B but not in A. Do you wanna keep it?")):
+                if(Listmerger.yesno("The above in " + path + " is in THEIRS but not in MINE. Do you wanna keep it?")):
                     out.append(item)
         return out
 
-    def mergeOther(this,objA,objB,path):
-        printA = str(objA)
-        printB = str(objB)
+    def mergeOther(this, objM, objT, path):
+        printM = str(objM)
+        printT = str(objT)
 
-        addition_idxs_A = listmerger.get_indexes_of_additions(printB, printA)
-        hl_A = listmerger.highlight_string_at_idxs(printA, addition_idxs_A)
+        addition_idxs_M = Listmerger.get_indexes_of_additions(printT, printM)
+        hl_M = Listmerger.highlight_string_at_idxs(printM, addition_idxs_M)
 
-        addition_idxs_B = listmerger.get_indexes_of_additions(printA, printB)
-        hl_B = listmerger.highlight_string_at_idxs(printB, addition_idxs_B)
+        addition_idxs_T = Listmerger.get_indexes_of_additions(printM, printT)
+        hl_T = Listmerger.highlight_string_at_idxs(printT, addition_idxs_T)
 
-        listmerger.display_in_columns(f"Value in dictionary A:\n {hl_A}", f"Value in dictionary B:\n {hl_B}")
+        Listmerger.display_in_columns(f"Value in dictionary MINE:\n {hl_M}", f"Value in dictionary THERIS:\n {hl_T}")
         print("Path: " + path)
-        if(listmerger.ab("Enter 'A' to keep value from A, 'B' to keep value from B: ")):
-            return objA
+        if(Listmerger.ab("Enter 'A' to keep value from MINE, 'B' to keep value from THEIRS: ")):
+            return objM
         else:
-            return objB
+            return objT
 
