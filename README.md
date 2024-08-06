@@ -61,6 +61,32 @@ Using a config file you can edit the location of the Assets, Packages and Librar
 
 **Note**: When using the Unity project path, a configuration file `UnityToolPackConfig.cfg` will be automatically generated in the Unity project directory.
 
+### Interactive Selection
+
+Merge conflicts are presented interactivly to be able to perfrom a qualified choice. Thus you will be asked for every conflict point individually while being provided with propper information.
+
+```
+╭───────────╮
+┘ Hierarchy └───────────────────────────────────────────────
+ ▼ ⬡ Canvases
+  ▼ ⬡ MainCanvas
+   ▼ ⬡ Scroll View
+    ▼ ⬡ Viewport
+     ▼ ⬡ Toggles
+      ▼ ⬢ [AppToggle.prefab]
+          AppToggle
+╭───────────────╮
+┘ MonoBehaviour └───────────────────────────────────────────
+ ▼ ⌸    RectTransform                                 ⏺ ≓ ⋮ 
+
+Property: m_AnchorMax.y
+Value in MINE:  Value in THEIRS:
+0               1               
+{'fileID': 0}   {'fileID': 0}   
+
+Values for [a]MINE and [b]THEIRS differ: which one do you wanna keep? [a/b]
+
+```
 
 Author
 ------
