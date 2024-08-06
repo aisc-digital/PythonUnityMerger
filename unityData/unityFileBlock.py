@@ -284,5 +284,5 @@ class UnityFileBlock:
     @staticmethod
     def nestedPrefabID(FileID_of_nested_PrefabInstance, FileID_of_object_in_nested_Prefab):
         #fileID for nested prefabs and also variants are generated based on the prefab instance and the corresponding object
-        #https://forum.unity.com/threads/how...orrespondingsourceobject.726704/#post-4851011
+        #https://discussions.unity.com/t/how-is-fileid-generated-for-m_correspondingsourceobject/754235
         return (FileID_of_nested_PrefabInstance ^ FileID_of_object_in_nested_Prefab) & 0x7fffffffffffffff
