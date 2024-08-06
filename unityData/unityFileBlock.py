@@ -14,6 +14,8 @@ import typing
 
 from typing import TYPE_CHECKING
 
+from yaml._yaml import ScannerError, ComposerError
+
 if TYPE_CHECKING:
     from unityData.unityProject import UnityProject
     from unityData.unityFile import UnityFile
@@ -34,8 +36,17 @@ class UnityFileBlock:
             splt = block.split("\n",1)
             block = splt[1]
             self._isStripped = "stripped" in splt[0]
-        self._object = yaml.load(block, yaml.Loader)
-
+            try:
+                self._object = yaml.load(block, yaml.Loader)
+            except ScannerError as e:
+                print("Could not parse Block (ScannerError): " + splt[0] + " in " + str(self.file.fileName))
+                self._object = {"Unknown Type": {"file_id":splt[0].rsplit("&")[-1]}}
+            except ComposerError as e:
+                print("Could not parse Block (ComposerError): " + splt[0] + " in " + str(self.file.fileName))
+                self._object = {"Unknown Type": {"file_id":splt[0].rsplit("&")[-1]}}
+        else:
+            print("Block Error in " + block.split("\n")[0])
+            self._object = {"Broken Block": {},}
 
     @property
     def isTransform(self):
@@ -94,9 +105,13 @@ class UnityFileBlock:
             if "m_Component" in self.gameObject:
                 for comp in self.gameObject["m_Component"]:
                     compID = comp["component"]["fileID"]
-                    compBlock = self.file.blocks[compID]
-                    if compBlock.isTransform:
-                        return compBlock
+                    try:
+                        compBlock = self.file.blocks[compID]
+                        if compBlock.isTransform:
+                            return compBlock
+                    except:
+                        print("Exception parsing file Blocks")
+                        return None
         #print("Object does not have a Transform", "STRIPPED" if self.isStripped else "")
         return None
 
@@ -196,7 +211,7 @@ class UnityFileBlock:
             path = leaf.blocks[ref["fileID"]].hierarchyPath
         for pnp in ref["prefabNestPath"]:
             nest = self.project.getReferenceFromGUID(pnp["guid"])
-            path = nest.blocks[pnp["fileID"]].hierarchyPath + "//" + path
+            path = nest.blocks[pnp["fileID"]].hierarchyPath + "/" + path
         return path
 
     def unstripped(self):

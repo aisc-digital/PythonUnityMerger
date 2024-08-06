@@ -3,6 +3,7 @@ import copy
 from UnityMerger.MonoBehaviourMerger import MonoBehaviourMerger
 from UnityMerger.UnityYamlTools import UnityYamlTools
 from UnityMerger.listmerger import Listmerger
+from unityData.unityFileBlock import UnityFileBlock
 from unityData.unityProject import UnityProject
 
 
@@ -12,6 +13,13 @@ class PrefabMerger:
         self.value_m = value_m
         self.value_t = value_t
         self.listmerger = Listmerger(self.project)
+    def scriptFromRefObj(self, refobj):
+        if "MonoBehaviour" in refobj.object:
+            script = refobj.object["MonoBehaviour"]["m_Script"]
+            return self.project.getReferenceFromGUID(script["guid"]).fileName.split("/")[-1]
+        return refobj.blocktype
+
+
     def mergePrefab(self):
         a_without_mod = copy.deepcopy(self.value_m.object)
         b_without_mod = copy.deepcopy(self.value_m.object)
@@ -29,6 +37,8 @@ class PrefabMerger:
         dict_m = {str(x["target"])+str(x["propertyPath"]) : x for x in mod_m}
         dict_t = {str(x["target"])+str(x["propertyPath"]) : x for x in mod_t}
 
+
+
         for km,vm in dict_m.items():
 
             path = self.value_m.hierarchyPath + "/" + self.value_m.searchReferencePath(vm["target"]["guid"], vm["target"]["fileID"])
@@ -36,7 +46,7 @@ class PrefabMerger:
             if(ref != None):
                 refobj = self.project.getReferenceFromGUID(ref["guid"]).blocks[ref["fileID"]]
             else:
-                refobj = "+UNKNOWN+"
+                refobj = UnityFileBlock(self.project,"UNKNOWN",0, "")
 
             if km in dict_t:
                 vt = dict_t[km]
@@ -45,7 +55,7 @@ class PrefabMerger:
                 else:
                     print("#####")
                     UnityYamlTools.VisualizeHierarchyPath(path)
-                    MonoBehaviourMerger.PrintMBHeader(refobj.blocktype)
+                    MonoBehaviourMerger.PrintMBHeader(self.scriptFromRefObj(refobj))
                     print("Property: " + vm["propertyPath"])
                     Listmerger.display_in_columns("Value in MINE:\n" + str(vm["value"]) + "\n" + str(vm["objectReference"]), f"Value in THEIRS:\n" + str(vt["value"]) + "\n" + str(vt["objectReference"]) + "\n")
                     print()
@@ -56,9 +66,9 @@ class PrefabMerger:
             else:
                 print("#####")
                 UnityYamlTools.VisualizeHierarchyPath(path)
-                MonoBehaviourMerger.PrintMBHeader(refobj.blocktype)
+                MonoBehaviourMerger.PrintMBHeader(self.scriptFromRefObj(refobj))
                 print("Property: " + vm["propertyPath"])
-                print("Value: " + vm["value"] + "/" + "Reference: " + vm["objectReference"])
+                print("Value:     " + str(vm["value"]) + "\n" + "Reference: " + str(vm["objectReference"]))
                 if(Listmerger.yesno(f"modification for {path} is in MINE but not in THEIRS. Do you wanna keep it?")):
                     mod_out.append(vm)
 
@@ -75,9 +85,9 @@ class PrefabMerger:
 
             print("#####")
             UnityYamlTools.VisualizeHierarchyPath(path)
-            MonoBehaviourMerger.PrintMBHeader(refobj.blocktype)
+            MonoBehaviourMerger.PrintMBHeader(self.scriptFromRefObj(refobj))
             print("Property:  " + vt["propertyPath"])
-            print("Value:     " + str(vt["value"]) + "/n" + "Reference: " + str(vt["objectReference"]))
+            print("Value:     " + str(vt["value"]) + "\n" + "Reference: " + str(vt["objectReference"]))
             if(Listmerger.yesno(f"modification for {path} is in THEIRS but not in MINE. Do you wanna keep it?")):
                 mod_out.append(vt)
         NewYaml["PrefabInstance"]["m_Modification"]["m_Modifications"] = mod_out

@@ -27,6 +27,9 @@ class UnityFile:
     def blocks(self) -> dict[int,unityFileBlock]:
         if self._blocks == None:
             self._blocks = dict()
+            if (self.fileName.lower().endswith(".fbx")):
+                print("FBX files are currently not supported")
+                return dict()
             with open(self.fileName) as file:
                 content = file.read()
             self._blocks = self.split_content_into_blocks(content,self.project, self)
