@@ -97,7 +97,7 @@ class Merge:
             tm = TransformMerger(value_m, value_t)
             NewYaml = tm.merge()
         else:
-            lmr = Listmerger()
+            lmr = Listmerger(value_m.project)
             NewYaml = lmr.recursiveMerge(value_m.object, value_t.object, "");
         yamlstring = StringIO()
 
